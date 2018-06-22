@@ -55,22 +55,22 @@ def main():
     # TODO: 4. Define classify_images() function to create the classifier 
     # labels with the classifier function uisng in_arg.arch, comparing the 
     # labels, and creating a dictionary of results (result_dic)
-    result_dic = classify_images()
+    result_dic = classify_images(in_args.dir, answers_dic, in_args.arch)
     
     # TODO: 5. Define adjust_results4_isadog() function to adjust the results
     # dictionary(result_dic) to determine if classifier correctly classified
     # images as 'a dog' or 'not a dog'. This demonstrates if the model can
     # correctly classify dog images as dogs (regardless of breed)
-    adjust_results4_isadog()
+    adjust_results4_isadog(result_dic, in_args.dogfile)
 
     # TODO: 6. Define calculates_results_stats() function to calculate
     # results of run and puts statistics in a results statistics
     # dictionary (results_stats_dic)
-    results_stats_dic = calculates_results_stats()
+    results_stats_dic = calculates_results_stats(result_dic)
 
     # TODO: 7. Define print_results() function to print summary results, 
     # incorrect classifications of dogs and breeds if requested.
-    print_results()
+    print_results(result_dic, results_stats_dic, in_args.arch, True, True)
 
     # TODO: 1. Define end_time to measure total program runtime
     # by collecting end time
@@ -164,7 +164,7 @@ def get_pet_labels(image_dir):
     return petlabels_dic
 
 
-def classify_images():
+def classify_images(images_dir, petlabel_dic, model):
     """
     Creates classifier labels with classifier function, compares labels, and 
     creates a dictionary containing both labels and comparison of them to be
@@ -189,10 +189,35 @@ def classify_images():
                     idx 2 = 1/0 (int)   where 1 = match between pet image and 
                     classifer labels and 0 = no match between labels
     """
-    pass
+    results_dic = dict()
+    
+    for image_name in petlabel_dic:
+        
+        truth = petlabel_dic[image_name]
+
+        image_path = images_dir + "/" + image_name
+        model_label = classifier(image_path, model).lower()
+
+        found = model_label.strip(" ").find(truth)
+
+        if found >= 0:
+            if ((found == 0 and len(truth) == len(model_label)) or
+                (   ((found == 0) or (model_label[found - 1] == " ")) and
+                    ((found + len(truth) == len(model_label)) or
+                    (model_label[found + len(truth): found+len(truth)+1] in
+                            (",", " "))
+                    )
+                )
+                ):
+                results_dic[image_name] = [truth, model_label,1]
+            else:
+                results_dic[image_name] = [truth, model_label,0]
+        else:
+            results_dic[image_name] = [truth, model_label, 0]
+    return results_dic
 
 
-def adjust_results4_isadog():
+def adjust_results4_isadog(results_dic, dogsfile):
     """
     Adjusts the results dictionary to determine if classifier correctly 
     classified images 'as a dog' or 'not a dog' especially when not a match. 
@@ -220,10 +245,86 @@ def adjust_results4_isadog():
     Returns:
            None - results_dic is mutable data type so no return needed.
     """           
-    pass
+    dognames_dic = dict()
+
+    with open(dogsfile, "r") as infile:
+        # Reads in dognames from first line in file
+        line = infile.readline()
+
+        # Processes each line in file until reaching EOF (end-of-file) by
+        # processing line and adding dognames to dognames_dic with while loop
+        while line != "":
+
+            # TODO: 5.a REPLACE pass with CODE remove the newline character from
+            #           the variable line
+            #
+            # Process line by striping newline from line
+            line = line.rstrip('\n')
+
+            # TODO: 5.b REPLACE pass with CODE TO check if dogname(line) doesn't
+            #           exist within dognames_dic, then add the dogname(line)
+            #           to dognames_dic as the 'key' with the 'value' of 1.
+            #
+            # adds dogname to dogsnames_dic if it doesn't already exist in dic
+            if line not in dognames_dic:
+                dognames_dic[line] = 1
+            else:
+                print("Warning: Duplicate files exist in directory: ", line)
+
+            # Reads in next line in file to be processed with while loop
+            # if this line isn't empty (EOF)
+            line = infile.readline()
+    
+    # Add to whether pet labels & classifier labels are dogs by appending
+    # two items to end of value(List) in results_dic.
+    # List Index 3 = whether(1) or not(0) Pet Image Label is a dog AND
+    # List Index 4 = whether(1) or not(0) Classifier Label is a dog
+    # How - iterate through results_dic if labels are found in dognames_dic
+    # then label "is a dog" index3/4=1 otherwise index3/4=0 "not a dog"
+    for key in results_dic:
+
+        # Pet Image Label IS of Dog (e.g. found in dognames_dic)
+        if results_dic[key][0] in dognames_dic:
+
+            # Classifier Label IS image of Dog (e.g. found in dognames_dic)
+            # appends (1, 1) because both labels are dogs
+            if results_dic[key][1].lower() in dognames_dic:
+                results_dic[key].extend((1, 1))
+
+            # TODO: 5.c REPLACE pass BELOW with CODE that adds the following to
+            #           results_dic dictionary for the key indicated by the
+            #           variable key - append (1,0) to the value. This indicates
+            #           the pet label is-a-dog, classifier label is-NOT-a-dog.
+            #
+            # Classifier Label IS NOT image of dog (e.g. NOT in dognames_dic)
+            # appends (1,0) because only pet label is a dog
+            else:
+                results_dic[key].extend((1, 0))
+
+        # Pet Image Label IS NOT a Dog image (e.g. NOT found in dognames_dic)
+        else:
+            # TODO: 5.d REPLACE pass BELOW with CODE that adds the following to
+            #           results_dic dictionary for the key indicated by the
+            #           variable key - append (0,1) to the value. This indicates
+            #           the pet label is-NOT-a-dog, classifier label is-a-dog.
+            #
+            # Classifier Label IS image of Dog (e.g. found in dognames_dic)
+            # appends (0, 1)because only Classifier labe is a dog
+            if results_dic[key][1].lower() in dognames_dic:
+                results_dic[key].extend((0, 1))
+
+            # TODO: 5.e REPLACE pass BELOW with CODE that adds the following to
+            #           results_dic dictionary for the key indicated by the
+            #           variable key - append (0,1) to the value. This indicates
+            #           the pet label is-NOT-a-dog, classifier label is-NOT-a-dog.
+            #
+            # Classifier Label IS NOT image of Dog (e.g. NOT in dognames_dic)
+            # appends (0, 0) because both labels aren't dogs
+            else:
+                results_dic[key].extend((0, 0))
 
 
-def calculates_results_stats():
+def calculates_results_stats(results_dic):
     """
     Calculates statistics of the results of the run using classifier's model 
     architecture on classifying images. Then puts the results statistics in a 
@@ -247,10 +348,120 @@ def calculates_results_stats():
                      name (starting with 'pct' for percentage or 'n' for count)
                      and the value is the statistic's value 
     """
-    pass
+    results_stats  = dict()
+
+    # Sets all counters to initial values of zero so that they can
+    # be incremented while processing through the images in results_dic
+    results_stats['n_dogs_img'] = 0
+    results_stats['n_match'] = 0
+    results_stats['n_correct_dogs'] = 0
+    results_stats['n_correct_notdogs'] = 0
+    results_stats['n_correct_breed'] = 0
+
+    # process through the results dictionary
+    for key in results_dic:
+
+        # Labels Match Exactly
+        if results_dic[key][2] == 1:
+            results_stats['n_match'] += 1
+
+        # TODO: 6.a REPLACE pass with CODE that counts how many pet images of
+        #           dogs had their breed correctly classified. This happens
+        #           when the pet image label indicates the image is-a-dog AND
+        #           the pet image label and the classifier label match. You
+        #           will need to write a conditional statement that determines
+        #           when the dog breed is correctly classified and then
+        #           increments 'n_correct_breed' by 1. Recall 'n_correct_breed'
+        #           is a key in the results_stats dictionary with it's value
+        #           representing the number of correctly classified dog breeds.
+        #
+        # Pet Image Label is a Dog AND Labels match- counts Correct Breed
+        if results_dic[key][2] == 1 and results_dic[key][3] == 1:
+            results_stats['n_correct_breed'] += 1
 
 
-def print_results():
+        # Pet Image Label is a Dog - counts number of dog images
+        if results_dic[key][3] == 1:
+            results_stats['n_dogs_img'] += 1
+
+            # Classifier classifies image as Dog (& pet image is a dog)
+            # counts number of correct dog classifications
+            if results_dic[key][4] == 1:
+                results_stats['n_correct_dogs'] += 1
+
+        # TODO: 6.b REPLACE pass with CODE that counts how many pet images
+        #           that are NOT dogs were correctly classified. This happens
+        #           when the pet image label indicates the image is-NOT-a-dog
+        #           AND the classifier label indicates the images is-NOT-a-dog.
+        #           You will need to write a conditional statement that
+        #           determines when the classifier label indicates the image
+        #           is-NOT-a-dog and then increments 'n_correct_notdogs' by 1.
+        #           Recall the 'else:' above 'pass' already indicates that the
+        #           pet image label indicates the image is-NOT-a-dog and
+        #          'n_correct_notdogs' is a key in the results_stats dictionary
+        #           with it's value representing the number of correctly
+        #           classified NOT-a-dog images.
+        #
+        # Pet Image Label is NOT a Dog
+        else:
+            # Classifier classifies image as NOT a Dog(& pet image isn't a dog)
+            # counts number of correct NOT dog clasifications.
+            if results_dic[key][4] == 0:
+              results_stats['n_correct_notdogs'] += 1
+
+    # Calculates run statistics (counts & percentages) below that are calculated
+    # using counters from above.
+
+    # calculates number of total images
+    results_stats['n_images'] = len(results_dic)
+
+    # calculates number of not-a-dog images using - images & dog images counts
+    results_stats['n_notdogs_img'] = (results_stats['n_images'] -
+                                      results_stats['n_dogs_img'])
+
+    # TODO: 6.c REPLACE zero(0.0) with CODE that calculates the % of correctly
+    #           matched images. Recall that this can be calculated by the
+    #           number of correctly matched images ('n_match') divided by the
+    #           number of images. This result will need to be multiplied by
+    #           100 to provide the percentage.
+    #
+    # Calculates % correct for matches
+    results_stats['pct_match'] = results_stats['n_match'] / \
+        results_stats['n_images'] * 100
+
+    # TODO: 6.d REPLACE zero(0.0) with CODE that calculates the % of correctly
+    #           classified dog images. Recall that this can be calculated by
+    #           the number of correctly classified dog images divided by the
+    #           number of dog images. This result will need to be multiplied by
+    #           100 to provide the percentage.
+    #
+    # Calculates % correct dogs
+    results_stats['pct_correct_dogs'] = results_stats['n_correct_dogs'] / \
+        results_stats['n_dogs_img'] * 100
+
+    # TODO: 6.e REPLACE zero(0.0) with CODE that calculates the % of correctly
+    #           classified breeds of dogs. Recall that this can be calculated
+    #           by the number of correctly classified breeds of dog divided by
+    #           the number of dog images. This result will need to be
+    #           multiplied by 100 to provide the percentage.
+    #
+    # Calculates % correct breed of dog
+    results_stats['pct_correct_breed'] = results_stats['n_correct_breed'] / \
+        results_stats['n_dogs_img'] * 100
+
+    # Calculates % correct not-a-dog images
+    # Uses conditional statement for when no 'not a dog' images were submitted
+    if results_stats['n_notdogs_img'] > 0:
+        results_stats['pct_correct_notdogs'] = (results_stats['n_correct_notdogs'] /
+                                                results_stats['n_notdogs_img'])*100.0
+    else:
+        results_stats['pct_correct_notdogs'] = 0.0
+
+    # returns results_stast dictionary
+    return results_stats
+
+
+def print_results(results_dic, results_stats, model, print_incorrect_dogs, print_incorrect_breed):
     """
     Prints summary results on the classification and then prints incorrectly 
     classified dogs and incorrectly classified dog breeds if user indicates 
@@ -279,7 +490,89 @@ def print_results():
     Returns:
            None - simply printing results.
     """    
-    pass
+    # TODO: 7. EDIT and ADD code BELOW to do the following that's stated
+    #          in the comments below that start with "TODO: 7."
+    #
+    # Prints summary statistics over the run
+    print("\n\n*** Results Summary for CNN Model Architecture", model.upper(),
+          "***")
+    print("%20s: %3d" % ('N Images', results_stats['n_images']))
+    print("%20s: %3d" % ('N Dog Images', results_stats['n_dogs_img']))
+
+    # TODO: 7.a REPLACE print("") with CODE that prints the text string
+    #          'N Not-Dog Images' and then the number of NOT-dog images
+    #          that's accessed by key 'n_notdogs_img' using dictionary
+    #          results_stats
+    #
+    print("N Not-Dog Images: %d" % results_stats['n_notdogs_img'])
+
+    # Prints summary statistics (percentages) on Model Run
+    print(" ")
+    for key in results_stats:
+        # TODO: 7.b REPLACE pass with CODE that prints out all the percentages
+        #           in the results_stats dictionary. Recall that all
+        #           percentages in results_stats have 'keys' that start with
+        #           the letter p. You will need to write a conditional
+        #           statement that determines if the key starts with the letter
+        #           'p' and then you want to use a print statement to print
+        #           both the key and the value. Remember the value is accessed
+        #           by results_stats[key]
+        #
+        if key[0] == 'p':
+            print("%s: %f %%" % (key, results_stats[key]))
+
+    # IF print_incorrect_dogs == True AND there were images incorrectly
+    # classified as dogs or vice versa - print out these cases
+    if (print_incorrect_dogs and
+                ((results_stats['n_correct_dogs'] + results_stats['n_correct_notdogs'])
+                 != results_stats['n_images'])
+            ):
+        print("\nINCORRECT Dog/NOT Dog Assignments:")
+
+        # process through results dict, printing incorrectly classified dogs
+        for key in results_dic:
+
+            # TODO: 7.c REPLACE pass with CODE that prints out the pet label
+            #           and the classifier label from results_dic dictionary
+            #           ONLY when the classifier function (classifier label)
+            #           misclassified dogs specifically:
+            #             pet label is-a-dog and classifier label is-NOT-a-dog
+            #               -OR-
+            #             pet label is-NOT-a-dog and classifier label is-a-dog
+            #           You will need to write a conditional statement that
+            #          determines if the classifier function misclassified dogs
+            #          See 'Adjusting Results Dictionary' section in
+            #         '13. Classifying Labels as Dogs' for details on the
+            #          format of the results_dic dictionary. Remember the value
+            #          is accessed by results_dic[key] and the value is a list
+            #          so results_dic[key][idx] - where idx represents the
+            #          index value of the list and can have values 0-4.
+            #
+            # Pet Image Label is a Dog - Classified as NOT-A-DOG -OR-
+            # Pet Image Label is NOT-a-Dog - Classified as a-DOG
+            if results_dic[key][3] != results_dic[key][4]:
+                if results_dic[key][3] == 1:
+                    print(key + ": Pet Image Label is a Dog - Classified as NOT-A-DOG")
+                else:
+                    print(key + ": Pet Image Label is NOT-a-Dog - Classified as a-DOG")
+
+    # IF print_incorrect_breed == True AND there were dogs whose breeds
+    # were incorrectly classified - print out these cases
+    if (print_incorrect_breed and
+                (results_stats['n_correct_dogs'] !=
+                 results_stats['n_correct_breed'])
+            ):
+        print("\nINCORRECT Dog Breed Assignment:")
+
+        # process through results dict, printing incorrectly classified breeds
+        for key in results_dic:
+
+            # Pet Image Label is-a-Dog, classified as-a-dog but is WRONG breed
+            if (sum(results_dic[key][3:]) == 2 and
+                    results_dic[key][2] == 0):
+                print("Real: %-26s   Classifier: %-30s" % (results_dic[key][0],
+                                                           results_dic[key][1]))
+
 
                 
                 
