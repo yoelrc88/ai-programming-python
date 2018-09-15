@@ -24,12 +24,10 @@ import matplotlib.pyplot as plt
 # print('torchvision: version', torchvision.__version__)
 # print('PIL version: ', Image.PILLOW_VERSION)
 
-
-def validate(model, criterion, dataloader, percent=100):
+def validate(model, device, criterion, dataloader, percent=100):
     model.eval()
     accuracy = 0
     valid_loss = 0
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     steps = 0
     
@@ -57,19 +55,22 @@ def validate(model, criterion, dataloader, percent=100):
     print("", end='\r')
     return valid_loss/steps, 100*accuracy/steps
 
-def train(model, criterion, optimizer, loader_train, loader_valid, epochs, learn_rate):
+def train(model, device, criterion, optimizer, loader_train, loader_valid, epochs, learn_rate):
     
     data_len = len(loader_train)
     validate_every = data_len # see validation 1 time by epoch
     steps = 0
     
     model.train()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
+
+    print("Starting training:")
+    print(" - epochs: {}".format(epochs))
+    print(" - learning_rate: {}".format(learn_rate))
+    print("Status:")
     
     # Training loop
     for e in range(epochs):
-        running_loss = 0
         for inputs, labels in iter(loader_train):
             epoch_status = 100*(steps%data_len)/data_len
             print("", end='\r')
@@ -78,28 +79,24 @@ def train(model, criterion, optimizer, loader_train, loader_valid, epochs, learn
             
             inputs, labels = inputs.to(device), labels.to(device)
 
+            model.train()
             optimizer.zero_grad()
             output = model.forward(inputs)
             loss = criterion(output, labels)
             loss.backward()
             optimizer.step()
-            running_loss += loss.item()
 
             
             if steps % validate_every == 0 or steps==1:
+                model.train()
                 print()
                 valid_loss, accuracy = validate(model, criterion, loader_valid, 10)
                 print("Valid Loss: {:.3f} ".format(valid_loss),
                       "Valid Accuracy %: {:.3f}".format(accuracy))
 
-                running_loss = 0
-                model.train()
-
 if __name__ == '__main__':
 
-    # ***************************************
     # Argument parser
-    # ***************************************
     parser = argparse.ArgumentParser()
     parser.add_argument("-d",
                         "--data_dir",  
@@ -256,6 +253,8 @@ if __name__ == '__main__':
 
     # update output layer
     params.update({'output': nn.LogSoftmax(dim=1)})
+    print("Classifier structure:")
+    print(params)
 
     model.classifier = nn.Sequential(params)
     model.to(device)
@@ -270,7 +269,29 @@ if __name__ == '__main__':
         momentum=momentum
     )
 
-    train(model, criterion, optimizer, dataloader_train, dataloader_valid, epochs, learning_rate)
+    # Start training
+    # train(model, device, criterion, optimizer, dataloader_train,
+    #       dataloader_valid, epochs, learning_rate)
 
+    # Save checkpoint
+    checkpoint_filename = "checkpoint-" + time.strftime("%Y%m%d-%H%M") + ".pth"
 
+    if save_dir:
+        save_dir_file = save_dir + checkpoint_filename
+    else:
+        save_dir_file = checkpoint_filename
 
+    # Select model checkpoint parameters to include in file
+    checkpoint = {  'input_size': input_size,
+                    'output_size': output_size,
+                    'epochs': epochs,
+                    'arch': args.arch,
+                    'hidden_units': hidden_units,
+                    'hidden_layers_num': hidden_layers_num,
+                    'learning_rate': learning_rate,
+                    'class_to_idx': class_to_idx,
+                    'optimizer_dict': optimizer.state_dict(),
+                    'classifier': model.classifier,
+                    'state_dict': model.state_dict()}
+
+    torch.save(checkpoint, save_dir_file)
