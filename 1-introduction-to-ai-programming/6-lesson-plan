@@ -1,0 +1,64 @@
+# Lesson Plan
+
+Udacity offers the AI Programming with Python Nanodegree to a wide range of students. As such, our students come from various backgrounds. Some of you will have had previous coding experience and some will have had none. For this reason we offer two suggested lesson plans. One lesson plan will apply to those of you with previous coding experience. The other will apply to those of you who feel they need more time to build coding confidence.
+
+These suggested lesson plans will give you an idea of how to partition your time. You are of course encouraged to make your own judgement and enjoy the content at your own specific pace.
+
+### Extracurricular section
+Notice that we provided you with an extracurricular section. In this section you will find additional useful lessons.
+
+for example:
+
+If you are completely new to Python, you will find our Intro to Python (Turtles and Code) lesson helpful.
+If you have extra time and want to learn more about Machine Learning, you will find our Intro to Machine Learning.
+Throughout the lessons, we will point you to additional extracurricular material when relevant.
+
+## Suggested Lesson Plan: Students Without Extensive Coding Experience
+
+### Module 1: Introduction to AI Programming with Python
+At your leisure
+
+### Module 2: Intro to Python
+* Lessons (Why Python Programming, Data Types and Operators, Control Flow, Functions and Scripting): **1.5 weeks**
+* Project_1 (using an Image classifier): **1.5 week**
+
+### Module 3: Numpy, Pandas, Matplotlib
+* Anaconda, Jupyter Notebooks: **1 week**
+* Numpy, Pandas, Matplotib: **1.5 weeks**
+
+### Module 4: Linear Algebra Essentials
+* Lessons (Introduction, Vectors, Linear Combination, Linear Transformation and Matrices and Linear Algebra in Neural Networks ): **0.5 week**
+* Labs (Vectors, Linear Combination and Linear Mapping): **0.5 week**
+
+### Module 5: Neural Networks
+* Lessons (Introduction to Neural Networks, Implementing Gradient Descent and Training Neural Networks): **1 week**
+* Lesson (Deep Learning with PyTorch): **1 week**
+
+### Module 6: Image Classifier Project: **2.5 weeks**
+
+(Notice that in total this sums up to 11.5 weeks. Use the extra time as you please.)
+
+## Suggested Lesson Plan: Students With Extensive Coding Experience
+
+### Module 1: Introduction to AI Programming with Python
+At your leisure
+
+### ### Module 2: Intro to Python
+* Lessons (Why Python Programming, Data Types and Operators, Control Flow, Functions and Scripting): **1 week**
+* Project_1 (using an Image classifier): **1 week**
+
+### Module 3: Numpy, Pandas, Matplotlib
+* Anaconda, Jupyter Notebooks: **1 week**
+* Numpy, Pandas, Matplotlib: **1 week**
+
+### Module 4: Linear Algebra Essentials
+* Lessons (Introduction, Vectors, Linear Combination, Linear Transformation and Matrices and Linear Algebra in Neural Networks ): **0.5 week**
+* Labs (Vectors, Linear Combination and Linear Mapping): **0.5 week**
+
+### Module 5: Neural Networks
+* Lessons (Introduction to Neural Networks, Implementing Gradient Descent and Training Neural Networks): **1 week**
+* Lesson (Deep Learning with PyTorch): **0.5 week**
+
+### Module 6: Image Classifier Project: **1.5 weeks**
+
+(Notice that you have 3.5 weeks of extra time if you choose to use it).
