@@ -90,9 +90,9 @@ def train(model, device, criterion, optimizer, loader_train, loader_valid, epoch
             if steps % validate_every == 0 or steps==1:
                 model.train()
                 print()
-                valid_loss, accuracy = validate(model, criterion, loader_valid, 10)
-                print("Valid Loss: {:.3f} ".format(valid_loss),
-                      "Valid Accuracy %: {:.3f}".format(accuracy))
+                valid_loss, accuracy = validate(model, device, criterion, loader_valid, 10) # TODO Remove last argument before sending
+                print("Validation Loss: {:.3f} ".format(valid_loss),
+                      "Validation Accuracy %: {:.3f}".format(accuracy))
 
 if __name__ == '__main__':
 
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     # Checking for GPU device usage or CPU
     # device = "cpu" #TODO: remove if no needed
     if use_gpu and torch.cuda.is_available():
-        device = torch.device("gpu")
+        device = torch.device("cuda")
         print("Running on GPU.")
     elif use_gpu and not torch.cuda.is_available():
         print("Error: --gpu was set but cuda device not available.")
@@ -254,11 +254,11 @@ if __name__ == '__main__':
     # update output layer
     params.update({'output': nn.LogSoftmax(dim=1)})
     print("Classifier structure:")
-    print(params)
 
     model.classifier = nn.Sequential(params)
     model.to(device)
     model.train()
+    print(model.classifier)
 
     # Loss function
     criterion = nn.NLLLoss()
@@ -270,18 +270,18 @@ if __name__ == '__main__':
     )
 
     # Start training
-    # train(model, device, criterion, optimizer, dataloader_train,
-    #       dataloader_valid, epochs, learning_rate)
+    train(model, device, criterion, optimizer, dataloader_train,
+          dataloader_valid, epochs, learning_rate)
 
     # Save checkpoint
-    checkpoint_filename = "checkpoint-" + time.strftime("%Y%m%d-%H%M") + ".pth"
+    checkpoint_filename = "/checkpoint-" + time.strftime("%Y%m%d-%H%M") + ".pth"
 
     if save_dir:
         save_dir_file = save_dir + checkpoint_filename
     else:
         save_dir_file = checkpoint_filename
 
-    # Select model checkpoint parameters to include in file
+    # parameters to include in checkpoint
     checkpoint = {  'input_size': input_size,
                     'output_size': output_size,
                     'epochs': epochs,
@@ -293,5 +293,5 @@ if __name__ == '__main__':
                     'optimizer_dict': optimizer.state_dict(),
                     'classifier': model.classifier,
                     'state_dict': model.state_dict()}
-
+    # save checkpoint
     torch.save(checkpoint, save_dir_file)
