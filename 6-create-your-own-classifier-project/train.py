@@ -90,7 +90,7 @@ def train(model, device, criterion, optimizer, loader_train, loader_valid, epoch
             if steps % validate_every == 0 or steps==1:
                 model.train()
                 print()
-                valid_loss, accuracy = validate(model, device, criterion, loader_valid, 10) # TODO Remove last argument before sending
+                valid_loss, accuracy = validate(model, device, criterion, loader_valid)
                 print("Validation Loss: {:.3f} ".format(valid_loss),
                       "Validation Accuracy %: {:.3f}".format(accuracy))
 
@@ -100,50 +100,54 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d",
                         "--data_dir",  
-                        help="Directory of the data", 
-                        default=os.getcwd())
+                        help="Directory of the data")
     parser.add_argument("-s",
                         "--save_dir",  
                         help="Directory to save the checkpoint", 
                         default="./")
     parser.add_argument("-a",
                         "--arch",
-                        help="Type of architecture. Accepted \"vgg19\" or \"alexnet\".",
+                        help="Type of architecture. Accepted \"vgg19\"(default) or \"alexnet\".",
                         default="vgg19")
     parser.add_argument("-lr",
                         "--learning_rate",
-                        help="Learning rate used for training.",
+                        help="Learning rate used for training. Default = 0.003",
                         default=0.003,
                         type=float)
     parser.add_argument("-m",
                         "--momentum",
-                        help="Momentum used for training.",
+                        help="Momentum used for training. Default = 0.9",
                         default=0.9,
                         type=float)
     parser.add_argument("-hu",
                         "--hidden_units",
-                        help="Number of units in hidden layers.",
+                        help="Number of units in hidden layers. Default = 12595",
                         default=12595,
                         type=int)
     parser.add_argument("-hl",
                         "--hidden_layers_num",
-                        help="Number of hidden layers.",
+                        help="Number of hidden layers. Default = 1",
                         default=1,
                         type=int)
     parser.add_argument("-dp",
                         "--drop_out",
-                        help="Drop out.",
+                        help="Drop out. Default = 0.6",
                         default=0.6,
                         type=float)
     parser.add_argument("-e",
                         "--epochs",
-                        help="Number of epochs used for training.",
+                        help="Number of epochs used for training. Default = 3",
                         default=3,
                         type=int)
     parser.add_argument("--gpu",
-                        help="Option for use GPU. CPU used if no specified.",
+                        help="Option for use GPU. CPU used if no specified. Default = CPU.",
                         action="store_true" )
     args = parser.parse_args()
+
+    if args.data_dir == None:
+        print("Error: --data_dir parameter not specified ")
+        parser.print_help()
+        sys.exit()
 
     data_dir = args.data_dir
     save_dir = args.save_dir

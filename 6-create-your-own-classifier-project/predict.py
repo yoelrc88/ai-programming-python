@@ -2,6 +2,7 @@ import sys
 import time
 import json
 import os
+from os import path
 import argparse
 
 import torch
@@ -62,12 +63,12 @@ def load_checkpoint(file_path):
     if checkpoint['arch'] == 'alexnet':
         model = models.alexnet(pretrained=True)
     elif checkpoint['arch'] == 'vgg19':
-        model = models.vgg16(pretrained=True)
+        model = models.vgg19(pretrained=True)
     elif checkpoint['arch'] == 'densenet121':
         model = models.densenet121(pretrained=True)
     else:
         print("Architecture \"{}\" not recongized.".format(args.arch))
-        args.print_help()
+        parser.print_help()
         sys.exit()
 
     for x in model.parameters():
@@ -129,42 +130,57 @@ if __name__ == '__main__':
                         action="store_true")
     parser.add_argument("--category_name",
                         help="File to load with the mapped cat to real names.",
-                        default="cat_to_names.json")
+                        default="cat_to_name.json")
     parser.add_argument("-v",
                         "--visual_output",
                         help="Shows the image and a bar chart with the top k classes.",
                         action="store_true")
     args = parser.parse_args()
 
-    image_path = args.image_path
-    check_point_path = args.checkpoint
-    top_k = args.topk
-    use_gpu = args.gpu
-    show_image = args.visual_output
+    if args.image_path == None:
+        print("Image path parameter not specified ")
+        parser.print_help()
+        sys.exit()
+    
+    if args.checkpoint == None:
+        print("Checkpoint file parameter not specified ")
+        parser.print_help()
+        sys.exit()
 
-    if use_gpu and torch.cuda.is_available():
+    if args.gpu and torch.cuda.is_available():
         device = torch.device("cuda")
         print("Running on GPU.")
-    elif use_gpu and not torch.cuda.is_available():
+    elif args.gpu and not torch.cuda.is_available():
         print("Error: --gpu was set but cuda device not available.")
         print("Warning: Running on CPU.")
     else:
         device = torch.device("cpu")
         print("Running on CPU.")
 
+    image_path = args.image_path
+    check_point_path = args.checkpoint
+    top_k = args.topk
+    show_image = args.visual_output
+
+    if not path.exists(args.category_name):
+        print("Category name file: {} does not exist".format(args.category_name))
+        print("Please enter a valid path")
+        sys.exit()
+
     with open(args.category_name, 'r') as f:
-        cat_to_names = json.load(f)
+        cat_to_name = json.load(f)
 
     model = load_checkpoint(check_point_path)
 
     probs, classes = predict(image_path, model, top_k, device)
 
-    y = [cat_to_names.get(i) for i in classes[::]]
+    y = [cat_to_name.get(i) for i in classes[::]]
     x = np.array(probs)
 
-    print("\n\n**Results from image {} using pretrained model checkpoint {}**".format(image_path, check_point_path))
-    print("\nProbabilies: {}".format(x))
-    print("Classes: {}\n\n".format(y))
+    print("Image: {}".format(image_path))
+    print("Checkpoint: {}".format(check_point_path))
+    print("Probabilies: {}".format(x))
+    print("Classes: {}\n".format(y))
     
     if show_image:
 
